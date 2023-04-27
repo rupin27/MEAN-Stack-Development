@@ -6,7 +6,6 @@ body {
 }
 
 .logo {
-    text-align: left;
     padding-left: 50px; 
 }
 
@@ -70,17 +69,17 @@ body {
     right: 0;  
     top: 425px;  
     height: 180px;  
+    padding: 10px 105px 0 75px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 105px 0 75px;
   }
   
   .section {
-    width: 30%;
     background-color: #f2f2f2;
-    padding: 5px;
     box-sizing: border-box;
+    width: 30%;
+    padding: 5px;
   }
 
 .headerBottom {
