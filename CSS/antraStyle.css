@@ -19,13 +19,16 @@ body {
     height: 45px;  
     display: flex;  
     align-items: center;  
-    }  
+}  
+
 .headerTop * {  
     display: inline;  
 }  
+
 .headerTop li {  
     margin: 30px;  
 }  
+
 .headerTop li a {  
     color: white;  
     text-decoration: none;  
