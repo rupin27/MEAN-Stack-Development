@@ -1,0 +1,118 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.logo {
+    text-align: left;
+    padding-left: 50px; 
+}
+
+.headerTop {  
+    background-color: #000;  
+    position: fixed;  
+    left: 0;  
+    right: 0;  
+    top: 130px;  
+    height: 45px;  
+    display: flex;  
+    align-items: center;  
+    }  
+.headerTop * {  
+    display: inline;  
+}  
+.headerTop li {  
+    margin: 30px;  
+}  
+.headerTop li a {  
+    color: white;  
+    text-decoration: none;  
+} 
+
+.tagLineBox {
+    font-family: Arial, sans-serif;
+    background-color: #c6bfbf;
+    position: fixed;  
+    left: 0;  
+    right: 0;  
+    top: 175px;  
+    height: 180px;  
+    margin: 0;
+    padding-top: 20px;
+    padding-left: 70px; 
+    padding-right: 150px;
+} 
+.tagLineMain {
+    font-family: Arial, sans-serif;
+    font-size: 25px;
+}
+
+.description {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    margin-top: 20px; 
+}
+
+.extraInfo {
+    color: #3366cc;
+}
+
+.container {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    position: fixed;  
+    left: 0;  
+    right: 0;  
+    top: 425px;  
+    height: 180px;  
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 105px 0 75px;
+  }
+  
+  .section {
+    width: 30%;
+    background-color: #f2f2f2;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+
+.headerBottom {
+  background-color: #0b4d14;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45px;
+  display: flex;
+  justify-content: space-between; /* Add this to evenly distribute the list items */
+  align-items: center;
+}
+
+.headerBottom * {
+  display: inline;
+}
+
+.headerBottom li {
+  margin: 0 30px; /* Set the horizontal margin to 30px */
+}
+
+.headerBottom li:nth-child(4) {
+    margin-left: 700px;
+  }
+
+.headerBottom li a {
+  color: white;
+  text-decoration: none;
+}
+
+
+
+
+
+
+
+  
