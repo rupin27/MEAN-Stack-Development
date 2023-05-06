@@ -15,7 +15,6 @@ const View = (() => {
     newGameBtn: document.querySelector(".new-game-button"),
     guesses: document.querySelector(".guesses"),
     incorrGuesses: document.querySelector(".incorr-guesses"),
-    prePickedGuesses: [],
   };
 
   const displayTimer = (timeRemaining) => {
@@ -23,11 +22,11 @@ const View = (() => {
     timer.textContent = `Time remaining: ${timeRemaining}`;
   };
 
-  const displayWorkingWord = (word, guessedLetters, initialLetters = 3) => {
+  const displayWorkingWord = (word, guessedLetters, visibleLetters) => {
     const wrkWrd = word
       .split("")
       .map((letter, i) =>
-        guessedLetters.includes(letter) || i < initialLetters ? letter : " _"
+        guessedLetters.includes(letter) || visibleLetters.includes(letter) ? letter : " _ "
       )
       .join("");
     domSelector.workingWord.textContent = wrkWrd;
@@ -61,21 +60,16 @@ const View = (() => {
 })();
 
 const Model = ((api, view) => {
-  const {
-    domSelector,
-    displayWorkingWord,
-    displayGuesses,
-    displayIncorrGuesses,
-    displayGuessessRemaning,
-    clearInput,
-  } = view;
+  const { domSelector } = view;
   const { getData } = api;
+
+  let origWord = "";
   let word = "";
   let guessedLetters = [];
   let incorrGuessedLetters = [];
+  let visibleLetters = [];
   let guesses = 0;
   const maxGuesses = 10;
-  let origWord = "";
 
   const pickNewWord = async () => {
     const data = await api.getData();
@@ -84,6 +78,14 @@ const Model = ((api, view) => {
     guessedLetters = [];
     incorrGuessedLetters = [];
     guesses = 0;
+
+    while (visibleLetters.length < 3) {
+      const index = Math.floor(Math.random() * word.length);
+      let letter = word[index]
+      if (!visibleLetters.includes(letter)) {
+        visibleLetters.push(letter);
+      }
+    }
   };
 
   const guessLetter = (letter) => {
@@ -91,10 +93,12 @@ const Model = ((api, view) => {
       alert("Word already guessed. Try a new word!");
       return;
     }
+
     if (incorrGuessedLetters.includes(letter)) {
       alert("Word already guessed. Try a new word!");
       return;
     }
+
     if (!word.includes(letter)) {
       incorrGuessedLetters.push(letter);
       guesses += 1;
@@ -116,6 +120,10 @@ const Model = ((api, view) => {
     return incorrGuessedLetters;
   };
 
+  const getVisibleLetters = () => {
+      return visibleLetters;
+    };    
+
   const getGuesses = () => {
     return guesses;
   };
@@ -127,10 +135,11 @@ const Model = ((api, view) => {
   const checkCompletion = () => {
     const lettersInWord = new Set(origWord.toLowerCase());
     const lettersGuessed = new Set(guessedLetters);
+    const lettersVisible = new Set(visibleLetters);
+    const unionSet = new Set([...lettersGuessed, ...lettersVisible]);
+
     return (
-      new Set([...lettersInWord].filter((x) => !lettersGuessed.has(x))).size ===
-      0
-    );
+      new Set([...lettersInWord].filter((x) => !unionSet.has(x))).size === 0);
   };
 
   return {
@@ -139,6 +148,7 @@ const Model = ((api, view) => {
     getWorkingWord,
     getGuessedLetters,
     getIncorrGuessedLetters,
+    getVisibleLetters,
     getGuesses,
     isGameOver,
     checkCompletion,
@@ -148,20 +158,11 @@ const Model = ((api, view) => {
 
 const Controller = ((view, model) => {
   const { domSelector } = view;
-  const {
-    pickNewWord,
-    guessLetter,
-    getWorkingWord,
-    getGuessedLetters,
-    getIncorrGuessedLetters,
-    getGuesses,
-    isGameOver,
-    maxGuesses,
-  } = model;
+  const { pickNewWord } = model;
 
   const init = async () => {
     await pickNewWord();
-    view.displayWorkingWord(model.getWorkingWord(), [], 2);
+    view.displayWorkingWord(model.getWorkingWord(), [], model.getVisibleLetters());
     view.displayGuesses(model.getGuessedLetters());
     view.displayIncorrGuesses(model.getIncorrGuessedLetters());
     view.displayGuessessRemaning(model.getGuesses());
@@ -187,27 +188,26 @@ const Controller = ((view, model) => {
     if (!/[a-z]/.test(letter)) {
       return;
     }
+
     domSelector.wordInput.value = "";
-    const correctGuess = guessLetter(letter);
+    const correctGuess = model.guessLetter(letter);
     if (correctGuess) {
-      view.displayWorkingWord(
-        model.getWorkingWord(),
-        model.getGuessedLetters()
-      );
+      view.displayWorkingWord(model.getWorkingWord(), model.getGuessedLetters(), model.getVisibleLetters());
       view.displayGuessessRemaning(model.getGuesses());
       view.displayGuesses(model.getGuessedLetters());
       view.displayIncorrGuesses(model.getIncorrGuessedLetters());
 
       if (model.isGameOver() || model.checkCompletion()) {
-        alert("You won!");
+        alert("You won! Ready for the next challenge?");
         handleNewGame();
       }
-    } else {
+    } 
+    else {
       view.displayGuesses(model.getGuessedLetters());
       view.displayIncorrGuesses(model.getIncorrGuessedLetters());
       view.displayGuessessRemaning(model.getGuesses());
       if (model.isGameOver()) {
-        alert(`Game over! The word was "${model.getWorkingWord()}".`);
+        alert(`Game over! The word was "${model.getWorkingWord()}". You guessed ${model.getGuessedLetters().length} letters correctly!`);
         handleNewGame();
       }
     }
@@ -215,7 +215,7 @@ const Controller = ((view, model) => {
 
   const handleNewGame = async () => {
     await pickNewWord();
-    view.displayWorkingWord(model.getWorkingWord(), [], 2);
+    view.displayWorkingWord(model.getWorkingWord(), [], model.getVisibleLetters());
     view.displayGuesses(model.getGuessedLetters());
     view.displayIncorrGuesses(model.getIncorrGuessedLetters());
     view.displayGuessessRemaning(model.getGuesses());
