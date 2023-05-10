@@ -83,12 +83,12 @@ const Model = ((api, view) => {
       this.incorrGuessedLetters = [];
       this.guesses = 0;
 
-      while (this.visibleLetters.length < 3) {
-      const index = Math.floor(Math.random() * this.word.length);
-      let letter = this.word[index];
-      if (!this.visibleLetters.includes(letter)) {
-          this.visibleLetters.push(letter);
-      }
+      while (this.visibleLetters.length < 3) { //this.origWord.length / 2, Chose 3 because it seems to put front the best challenge 
+        const index = Math.floor(Math.random() * this.word.length);
+        let letter = this.word[index];
+        if (!this.visibleLetters.includes(letter)) {
+            this.visibleLetters.push(letter);
+        }
       }
   };
 
@@ -155,17 +155,14 @@ const Controller = ((view, model) => {
   const { State } = model;
 
   const state = new State();
-  let timerId; 
+  let timerId;
 
   const init = async () => {
     await state.pickNewWord();
     view.displayWorkingWord(state.getWorkingWord(), [], state.getVisibleLetters());
-    view.displayGuesses(state.getGuessedLetters());
-    view.displayIncorrGuesses(state.getIncorrGuessedLetters());
     view.displayGuessessRemaning(state.getGuesses());
-
     let timeRemaining = 60;
-    timerId = setInterval(() => { 
+    timerId = setInterval(() => {
       timeRemaining--;
       view.displayTimer(timeRemaining);
       if (timeRemaining === 0) {
@@ -174,18 +171,8 @@ const Controller = ((view, model) => {
         handleNewGame();
       }
     }, 1000);
-  };
-
-  const handleNewGame = () => {
-    clearInterval(timerId); 
-    state.pickNewWord().then(() => {
-      view.clearInput();
-      view.displayGuesses([]);
-      view.displayIncorrGuesses([]);
-      view.displayGuessessRemaning(0);
-      view.displayWorkingWord(state.getWorkingWord(), [], state.getVisibleLetters());
-      init();
-    });
+    view.displayGuesses(state.getGuessedLetters());
+    view.displayIncorrGuesses(state.getIncorrGuessedLetters());
   };
 
   const handleGuess = () => {
@@ -193,36 +180,48 @@ const Controller = ((view, model) => {
     if (!input || input.length > 1) {
       return;
     }
-    const letter = input.toLowerCase();
+    const letter = input[0].toLowerCase();
+    if (!/[a-z]/.test(letter)) {
+      return;
+    }
     domSelector.wordInput.value = "";
     const correctGuess = state.guessLetter(letter);
     if (correctGuess) {
-      const visibleLetters = state.getVisibleLetters();
-      if (state.checkCompletion()) {
+      view.displayWorkingWord(state.getWorkingWord(), state.getGuessedLetters(), state.getVisibleLetters());
+      view.displayGuessessRemaning(state.getGuesses());
+      view.displayGuesses(state.getGuessedLetters());
+      view.displayIncorrGuesses(state.getIncorrGuessedLetters());
+
+      if (state.isGameOver() || state.checkCompletion()) {
         alert("You won! Ready for the next challenge?");
         handleNewGame();
-      } 
-      else {
-        view.displayWorkingWord(state.getWorkingWord(), state.getGuessedLetters(), visibleLetters);
-        view.displayGuesses(state.getGuessedLetters());
-        view.displayGuessessRemaning(state.getGuesses());
       }
-    } else {
+    } 
+    else {
+      view.displayGuesses(state.getGuessedLetters());
       view.displayIncorrGuesses(state.getIncorrGuessedLetters());
       view.displayGuessessRemaning(state.getGuesses());
       if (state.isGameOver()) {
-          alert(`Game over! The word was "${state.getWorkingWord()}". You guessed ${state.getGuessedLetters().length} letters correctly!`);
+        alert(`Game over! The word was "${state.getWorkingWord()}". You guessed ${state.getGuessedLetters().length} letters correctly!`);
         handleNewGame();
       }
     }
   };
 
-  domSelector.newGameBtn.addEventListener("click", handleNewGame);
-  domSelector.wordInput.addEventListener("keyup", (event) => {
-    if (event.key === "Enter") {
-      handleGuess();
-    }
-  });
+  const handleNewGame = async () => {
+      clearInterval(timerId);
+      init()
+  };
+
+  const addEventListeners = () => {
+    domSelector.wordInput.addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        handleGuess();
+      }
+    });
+    // domSelector.guessBtn.addEventListener('click', handleGuess);
+    domSelector.newGameBtn.addEventListener("click", handleNewGame);
+  };
 
   const bootstrap = async () => {
     await init();
