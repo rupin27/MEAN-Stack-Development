@@ -62,110 +62,106 @@ const View = (() => {
 const Model = ((api, view) => {
   const { domSelector } = view;
   const { getData } = api;
+  
+  class State {
+      constructor() {
+          this.origWord = "";
+          this.word = "";
+          this.guessedLetters = [];
+          this.incorrGuessedLetters = [];
+          this.visibleLetters = [];
+          this.guesses = 0;
+          this.maxGuesses = 10;
+      };
+  }
 
-  let origWord = "";
-  let word = "";
-  let guessedLetters = [];
-  let incorrGuessedLetters = [];
-  let visibleLetters = [];
-  let guesses = 0;
-  const maxGuesses = 10;
+  State.prototype.pickNewWord = async function() {
+      const data = await getData();
+      this.word = data[0];
+      this.origWord = data[0];
+      this.guessedLetters = [];
+      this.incorrGuessedLetters = [];
+      this.guesses = 0;
 
-  const pickNewWord = async () => {
-    const data = await api.getData();
-    word = data[0];
-    origWord = data[0];
-    guessedLetters = [];
-    incorrGuessedLetters = [];
-    guesses = 0;
-
-    while (visibleLetters.length < 3) {
-      const index = Math.floor(Math.random() * word.length);
-      let letter = word[index]
-      if (!visibleLetters.includes(letter)) {
-        visibleLetters.push(letter);
+      while (this.visibleLetters.length < 3) {
+      const index = Math.floor(Math.random() * this.word.length);
+      let letter = this.word[index];
+      if (!this.visibleLetters.includes(letter)) {
+          this.visibleLetters.push(letter);
       }
-    }
+      }
   };
 
-  const guessLetter = (letter) => {
-    if (guessedLetters.includes(letter)) {
+  State.prototype.guessLetter = function(letter) {
+      if (this.guessedLetters.includes(letter)) {
       alert("Word already guessed. Try a new word!");
       return;
-    }
+      }
 
-    if (incorrGuessedLetters.includes(letter)) {
+      if (this.incorrGuessedLetters.includes(letter)) {
       alert("Word already guessed. Try a new word!");
       return;
-    }
+      }
 
-    if (!word.includes(letter)) {
-      incorrGuessedLetters.push(letter);
-      guesses += 1;
+      if (!this.word.includes(letter)) {
+      this.incorrGuessedLetters.push(letter);
+      this.guesses += 1;
       return false;
-    }
-    guessedLetters.push(letter);
-    return true;
+      }
+      this.guessedLetters.push(letter);
+      return true;
   };
 
-  const getWorkingWord = () => {
-    return word;
+  State.prototype.getWorkingWord = function() {
+      return this.word;
   };
 
-  const getGuessedLetters = () => {
-    return guessedLetters;
+  State.prototype.getGuessedLetters = function() {
+      return this.guessedLetters;
   };
 
-  const getIncorrGuessedLetters = () => {
-    return incorrGuessedLetters;
+  State.prototype.getIncorrGuessedLetters = function() {
+      return this.incorrGuessedLetters;
   };
 
-  const getVisibleLetters = () => {
-      return visibleLetters;
-    };    
-
-  const getGuesses = () => {
-    return guesses;
+  State.prototype.getVisibleLetters = function() {
+      return this.visibleLetters;
   };
 
-  const isGameOver = () => {
-    return guesses >= maxGuesses;
+  State.prototype.getGuesses = function() {
+      return this.guesses;
   };
 
-  const checkCompletion = () => {
-    const lettersInWord = new Set(origWord.toLowerCase());
-    const lettersGuessed = new Set(guessedLetters);
-    const lettersVisible = new Set(visibleLetters);
-    const unionSet = new Set([...lettersGuessed, ...lettersVisible]);
+  State.prototype.isGameOver = function() {
+      return this.guesses >= this.maxGuesses;
+  };
 
-    return (
-      new Set([...lettersInWord].filter((x) => !unionSet.has(x))).size === 0);
+  State.prototype.checkCompletion = function() {
+      const lettersInWord = new Set(this.origWord.toLowerCase());
+      const lettersGuessed = new Set(this.guessedLetters);
+      const lettersVisible = new Set(this.visibleLetters);
+      const unionSet = new Set([...lettersGuessed, ...lettersVisible]);
+
+      return new Set([...lettersInWord].filter((x) => !unionSet.has(x))).size === 0;
   };
 
   return {
-    pickNewWord,
-    guessLetter,
-    getWorkingWord,
-    getGuessedLetters,
-    getIncorrGuessedLetters,
-    getVisibleLetters,
-    getGuesses,
-    isGameOver,
-    checkCompletion,
-    maxGuesses,
+      State
   };
 })(Api, View);
 
 const Controller = ((view, model) => {
   const { domSelector } = view;
-  const { pickNewWord } = model;
+  const { State } = model;
+
+  const state = new State();
 
   const init = async () => {
-    await pickNewWord();
-    view.displayWorkingWord(model.getWorkingWord(), [], model.getVisibleLetters());
-    view.displayGuesses(model.getGuessedLetters());
-    view.displayIncorrGuesses(model.getIncorrGuessedLetters());
-    view.displayGuessessRemaning(model.getGuesses());
+    await state.pickNewWord();
+    view.displayWorkingWord(state.getWorkingWord(), [], state.getVisibleLetters());
+    view.displayGuesses(state.getGuessedLetters());
+    view.displayIncorrGuesses(state.getIncorrGuessedLetters());
+    view.displayGuessessRemaning(state.getGuesses());
 
     let timeRemaining = 60;
     const timerId = setInterval(() => {
@@ -190,35 +186,35 @@ const Controller = ((view, model) => {
     }
 
     domSelector.wordInput.value = "";
-    const correctGuess = model.guessLetter(letter);
+    const correctGuess = state.guessLetter(letter);
     if (correctGuess) {
-      view.displayWorkingWord(model.getWorkingWord(), model.getGuessedLetters(), model.getVisibleLetters());
-      view.displayGuessessRemaning(model.getGuesses());
-      view.displayGuesses(model.getGuessedLetters());
-      view.displayIncorrGuesses(model.getIncorrGuessedLetters());
+      view.displayWorkingWord(state.getWorkingWord(), state.getGuessedLetters(), state.getVisibleLetters());
+      view.displayGuessessRemaning(state.getGuesses());
+      view.displayGuesses(state.getGuessedLetters());
+      view.displayIncorrGuesses(state.getIncorrGuessedLetters());
 
-      if (model.isGameOver() || model.checkCompletion()) {
+      if (state.isGameOver() || state.checkCompletion()) {
         alert("You won! Ready for the next challenge?");
         handleNewGame();
       }
     } 
     else {
-      view.displayGuesses(model.getGuessedLetters());
-      view.displayIncorrGuesses(model.getIncorrGuessedLetters());
-      view.displayGuessessRemaning(model.getGuesses());
-      if (model.isGameOver()) {
-        alert(`Game over! The word was "${model.getWorkingWord()}". You guessed ${model.getGuessedLetters().length} letters correctly!`);
+      view.displayGuesses(state.getGuessedLetters());
+      view.displayIncorrGuesses(state.getIncorrGuessedLetters());
+      view.displayGuessessRemaning(state.getGuesses());
+      if (state.isGameOver()) {
+        alert(`Game over! The word was "${state.getWorkingWord()}". You guessed ${state.getGuessedLetters().length} letters correctly!`);
         handleNewGame();
       }
     }
   };
 
   const handleNewGame = async () => {
-    await pickNewWord();
-    view.displayWorkingWord(model.getWorkingWord(), [], model.getVisibleLetters());
-    view.displayGuesses(model.getGuessedLetters());
-    view.displayIncorrGuesses(model.getIncorrGuessedLetters());
-    view.displayGuessessRemaning(model.getGuesses());
+    await state.pickNewWord();
+    view.displayWorkingWord(state.getWorkingWord(), [], state.getVisibleLetters());
+    view.displayGuesses(state.getGuessedLetters());
+    view.displayIncorrGuesses(state.getIncorrGuessedLetters());
+    view.displayGuessessRemaning(state.getGuesses());
 
     let timeRemaining = 60;
     const timerId = setInterval(() => {

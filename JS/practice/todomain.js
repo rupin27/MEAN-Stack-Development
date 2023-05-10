@@ -17,9 +17,10 @@ const Api =(()=>{
 
 const View = (() => {
     let domSelector = {
-        container: ".todo-container",
-        inputBox: "#user-input",
-        btn:"#addBtn"
+        todoContainer: ".todo-list",
+        complContainer: ".complete-list",
+        inputBox: ".user-input",
+        btn:".addBtn"
     }
     
     // console.log(document.getElementsByClassName(container));
@@ -31,7 +32,7 @@ const View = (() => {
             template += `<li>
                 <span>${todo.id}</span>
                 <span>${todo.title}</span>
-                <button id="del">Delete</button>
+                <button id="del">Completed</button>
             </li>`;
         });
         return template;
@@ -55,22 +56,31 @@ const Model = ((api, view)=>{
     class State{
         constructor(){
             this._todoList = [];
+            this._completedList = []
         }
 
         get getTodoList(){
             return this._todoList;
         }
 
+        get completedList() {
+            return this._completedList
+        }
+
         set newTodoList(newList){
             this._todoList = newList;
-            // Invoking functions
-            let todoContainer = document.querySelector(domSelector.container);
-            
+            let todoCont = document.querySelector(domSelector.todoContainer);
             let tmp = creatTmp(this._todoList);
-            render(todoContainer, tmp);
+            render(todoCont, tmp);
+        }
+
+        set newCompletedList(newList){
+            this._completedList = newList;
+            let complCont = document.querySelector(domSelector.complContainer);
+            let tmp = creatTmp(this._completedList);
+            render(complCont, tmp);
         }
     }
-
     return {
         State,
         getData
@@ -85,6 +95,7 @@ const Controller = ((view, model)=>{
     const init = () => {
         getData.then((data) => {
             state.newTodoList = data;
+            state.newCompletedList = []
         });
     }
 
@@ -100,18 +111,26 @@ const Controller = ((view, model)=>{
             };
             const newList = [item, ...state.getTodoList];
             state.newTodoList = newList;
-            console.log(newList)
             userInput.value="";
         })
     }
 
-    const deleteTodo = () => {
-        const todoContainer = document.querySelector(domSelector.container);
-        todoContainer.addEventListener('click', (event) => {
+
+    const completeTodo = () => {
+        const todoCont = document.querySelector(domSelector.todoContainer);
+        const complCont = document.querySelector(domSelector.complContainer);
+        todoCont.addEventListener('click', (event) => {
             if (event.target.id === 'del') {
                 const todoId = parseInt(event.target.parentNode.querySelector('span').innerText);
+                const todoTitle = event.target.parentNode.querySelector('span:nth-child(2)').innerText;
+                console.log(todoId, todoTitle)
                 const newList = state.getTodoList.filter((todo) => todo.id !== todoId);
                 state.newTodoList = newList;
+                const newCompList = [
+                    { title: todoTitle, id: todoId },
+                    ...state.completedList
+                  ];
+                  state.newCompletedList = newCompList;
             }
         });
     }
@@ -120,7 +139,7 @@ const Controller = ((view, model)=>{
     const bootstrap = ()=>{
         init();
         addTodo();
-        deleteTodo();
+        completeTodo();
     }
 
     return {
