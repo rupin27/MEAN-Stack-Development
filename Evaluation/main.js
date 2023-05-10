@@ -248,3 +248,5 @@ const Controller = ((view, model) => {
 })(View, Model);
 
 Controller.bootstrap();
+
+
